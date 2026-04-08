@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WatchDog — Website Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0b0f19; --surface: #111827; --card: #161d2e; --border: #1e2d45;
+    --accent: #3b82f6; --accent2: #06b6d4; --green: #10b981;
+    --yellow: #f59e0b; --red: #ef4444; --text: #e2e8f0; --muted: #64748b;
+    --radius: 14px; --font-head: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+  .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 28px 20px; display: flex; flex-direction: column; gap: 32px; position: sticky; top: 0; height: 100vh; }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-head); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; cursor: pointer; color: var(--muted); font-size: 14px; font-weight: 500; transition: all 0.2s; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--card); color: var(--text); }
+  .nav-item.active { background: rgba(59,130,246,0.12); color: var(--accent); }
+  .sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .status-pill { display: flex; align-items: center; gap: 8px; border-radius: 20px; padding: 7px 12px; font-size: 12px; font-weight: 500; }
+  .status-pill.online { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: var(--green); }
+  .status-pill.offline { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: var(--red); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .online .status-dot { background: var(--green); animation: pulse 2s infinite; }
+  .offline .status-dot { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)} }
+
+  /* Main */
+  .main { display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(11,15,25,0.9); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
+  .topbar-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+  .topbar-right { display: flex; gap: 12px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 10px; border: none; cursor: pointer; font-family: var(--font-body); font-size: 14px; font-weight: 500; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,130,246,.35); }
+  .btn-ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--border); }
+
+  /* Tab pages */
+  .tab-page { display: none; padding: 32px; flex-direction: column; gap: 28px; }
+  .tab-page.active { display: flex; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; display: flex; flex-direction: column; gap: 8px; transition: border-color .2s; }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+  .stat-value { font-family: var(--font-head); font-size: 32px; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--muted); }
+  .stat-sub.up { color: var(--green); }
+
+  /* Section */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
+
+  /* Sites table */
+  .sites-table { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .table-head { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; padding: 12px 20px; background: rgba(30,45,69,.5); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .site-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; padding: 16px 20px; align-items: center; border-bottom: 1px solid var(--border); transition: background .15s; }
+  .site-row:last-child { border-bottom: none; }
+  .site-row:hover { background: rgba(59,130,246,.04); }
+  .site-url { display: flex; flex-direction: column; gap: 2px; }
+  .site-url a { color: var(--text); text-decoration: none; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; display: block; }
+  .site-url a:hover { color: var(--accent); }
+  .site-url small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; display: block; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-major { background: rgba(239,68,68,.12); color: var(--red); }
+  .badge-minor { background: rgba(245,158,11,.12); color: var(--yellow); }
+  .badge-none  { background: rgba(16,185,129,.12); color: var(--green); }
+  .site-actions { display: flex; gap: 6px; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all .15s; }
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+  .icon-btn.danger:hover { background: rgba(239,68,68,.1); color: var(--red); border-color: rgba(239,68,68,.3); }
+  .icon-btn.run:hover { background: rgba(59,130,246,.1); color: var(--accent); border-color: rgba(59,130,246,.3); }
+  .spinning { animation: spin 1s linear infinite; }
+  @keyframes spin { from{transform:rotate(0)}to{transform:rotate(360deg)} }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 64px 32px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .empty-icon { font-size: 40px; opacity: .4; }
+  .empty-state h3 { font-family: var(--font-head); color: var(--text); font-size: 18px; }
+  .empty-state p { font-size: 14px; max-width: 300px; }
+
+  /* History */
+  .history-feed { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .history-item { display: flex; align-items: flex-start; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border); transition: background .15s; }
+  .history-item:last-child { border-bottom: none; }
+  .history-item:hover { background: rgba(255,255,255,.02); }
+  .history-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .history-icon.major { background: rgba(239,68,68,.12); }
+  .history-icon.minor { background: rgba(245,158,11,.12); }
+  .history-icon.none  { background: rgba(16,185,129,.12); }
+  .history-body { flex: 1; min-width: 0; }
+  .history-url  { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .history-time { font-size: 11px; color: var(--muted); flex-shrink: 0; white-space: nowrap; }
+
+  /* Bottom grid */
+  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* Chart */
+  .chart-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .chart-label { font-size: 12px; color: var(--muted); width: 60px; flex-shrink: 0; }
+  .chart-bar-bg { flex: 1; background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+  .chart-bar { height: 100%; border-radius: 4px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .chart-value { font-size: 12px; color: var(--text); width: 30px; text-align: right; flex-shrink: 0; }
+
+  /* Alert card */
+  .alert-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .alert-card h3 { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row span:first-child { color: var(--muted); }
+  .info-row span:last-child { font-weight: 500; }
+
+  /* Server banner */
+  .server-banner { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #fca5a5; }
+  .server-banner.hidden { display: none; }
+  .server-banner strong { color: var(--text); }
+  code { background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px; font-size: 12px; font-family: monospace; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(6px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 32px; width: 100%; max-width: 480px; transform: translateY(20px) scale(.97); transition: transform .25s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 32px 80px rgba(0,0,0,.5); }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .form-label { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .form-input, .form-select { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-family: var(--font-body); font-size: 14px; width: 100%; transition: border-color .2s, box-shadow .2s; outline: none; }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+  .form-input::placeholder { color: var(--muted); }
+  .form-select option { background: var(--surface); color: var(--text); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+  /* Toast */
+  .toast-stack { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+  .toast { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 13px 18px; font-size: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.4); animation: slideIn .3s cubic-bezier(.34,1.56,.64,1) both; min-width: 260px; max-width: 380px; }
+  .toast.hide { animation: slideOut .25s ease forwards; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)} }
+  @keyframes slideOut { to{opacity:0;transform:translateX(40px)} }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .table-head, .site-row { grid-template-columns: 1fr auto; }
+    .table-head span:not(:first-child):not(:last-child), .site-row > *:not(:first-child):not(:last-child) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🐕</div>
+      WatchDog
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="switchTab('dashboard',this)"><span>◈</span> Dashboard</button>
+      <button class="nav-item" onclick="switchTab('sites',this)"><span>◉</span> Sites</button>
+      <button class="nav-item" onclick="switchTab('history',this)"><span>◷</span> History</button>
+      <button class="nav-item" onclick="switchTab('alerts',this)"><span>◎</span> Alerts</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-pill online" id="serverStatus">
+        <div class="status-dot"></div>
+        <span id="serverStatusText">Connecting…</span>
+      </div>
+      <button class="btn btn-ghost" onclick="checkAll()" style="width:100%;justify-content:center;">↻ Check All Now</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="tabTitle">Dashboard</div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" onclick="loadData()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="openModal()">＋ Add Site</button>
+      </div>
+    </header>
+
+    <!-- TAB: Dashboard -->
+    <div id="tab-dashboard" class="tab-page active">
+      <div class="server-banner hidden" id="serverBanner">
+        <span style="font-size:22px">⚠️</span>
+        <div><strong>Flask server not running.</strong> Open a terminal and run <code>python app.py</code>, then click Refresh.</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Sites Tracked</div><div class="stat-value" id="statSites">0</div><div class="stat-sub">total monitored</div></div>
+        <div class="stat-card"><div class="stat-label">Total Events</div><div class="stat-value" id="statChanges">0</div><div class="stat-sub up">↑ detected</div></div>
+        <div class="stat-card"><div class="stat-label">Major Alerts</div><div class="stat-value" id="statMajor" style="color:var(--red)">0</div><div class="stat-sub">require attention</div></div>
+        <div class="stat-card"><div class="stat-label">Last Check</div><div class="stat-value" style="font-size:20px" id="statLast">—</div><div class="stat-sub" id="statLastSub">awaiting data</div></div>
+      </div>
+      <div>
+        <div class="section-header"><div class="section-title">Monitored Sites</div><button class="btn btn-ghost" onclick="openModal()" style="font-size:13px">＋ Add</button></div>
+        <div class="sites-table">
+          <div class="table-head"><span>Website</span><span>Status</span><span>Interval</span><span>Last Checked</span><span>Changes</span><span></span></div>
+          <div id="sitesListDash"></div>
+        </div>
+      </div>
+      <div class="bottom-grid">
+        <div>
+          <div class="section-header"><div class="section-title">Recent Changes</div><span style="font-size:12px;color:var(--muted)" id="histCount">0 events</span></div>
+          <div class="history-feed" id="histFeedDash"></div>
+        </div>
+        <div>
+          <div class="section-header"><div class="section-title">Change Breakdown</div></div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px">
+            <div class="chart-row"><div class="chart-label">Major</div><div class="chart-bar-bg"><div class="chart-bar" id="barMajor" style="width:0%;background:var(--red)"></div></div><div class="chart-value" id="valMajor">0</div></div>
+            <div class="chart-row"><div class="chart-label">Minor</div><div class="chart-bar-bg"><div class="chart-bar" id="barMinor" style="width:0%;background:var(--yellow)"></div></div><div class="chart-value" id="valMinor">0</div></div>
+            <div class="chart-row"><div class="chart-label">None</div><div class="chart-bar-bg"><div class="chart-bar" id="barNone" style="width:0%;background:var(--green)"></div></div><div class="chart-value" id="valNone">0</div></div>
+            <hr style="border-color:var(--border);margin:20px 0">
+            <div style="font-size:13px;color:var(--muted);line-height:2.4">
+              <div style="display:flex;justify-content:space-between"><span>Total checks</span><span id="infoTotal" style="color:var(--text);font-weight:500">0</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Change rate</span><span id="infoRate" style="color:var(--text);font-weight:500">0%</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Sites active</span><span id="infoActive" style="color:var(--text);font-weight:500">0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Sites -->
+    <div id="tab-sites" class="tab-page">
+      <div class="section-header"><div class="section-title">All Monitored Sites</div><button class="btn btn-primary" onclick="openModal()">＋ Add Site</button></div>
+      <div class="sites-table">
+        <div class="table-head"><span>Website</span><span>Status</span><span>Interval</span><span>Last Checked</span><span>Changes</span><span></span></div>
+        <div id="sitesListFull"></div>
+      </div>
+    </div>
+
+    <!-- TAB: History -->
+    <div id="tab-history" class="tab-page">
+      <div class="section-header"><div class="section-title">Full Change History</div><span style="font-size:13px;color:var(--muted)" id="histCountFull">0 events</span></div>
+      <div class="history-feed" id="histFeedFull"></div>
+    </div>
+
+    <!-- TAB: Alerts -->
+    <div id="tab-alerts" class="tab-page">
+      <div class="section-header"><div class="section-title">Alert Configuration</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="alert-card">
+          <h3>📧 Email Setup (.env file)</h3>
+          <p style="font-size:13px;color:var(--muted)">Create a <code>.env</code> file in your project folder with these values:</p>
+          <div class="info-row"><span>SMTP_USER</span><span>yourgmail@gmail.com</span></div>
+          <div class="info-row"><span>SMTP_PASS</span><span>xxxx xxxx xxxx xxxx</span></div>
+          <div class="info-row"><span>ALERT_FROM</span><span>sender address</span></div>
+          <div class="info-row"><span>ALERT_TO</span><span>recipient address</span></div>
+          <a href="https://myaccount.google.com/apppasswords" target="_blank" class="btn btn-ghost" style="width:fit-content;font-size:13px;text-decoration:none">🔑 Get Gmail App Password →</a>
+        </div>
+        <div class="alert-card">
+          <h3>⚡ Classification Rules</h3>
+          <p style="font-size:13px;color:var(--muted)">How changes are classified when a site is checked:</p>
+          <div class="info-row"><span>🔴 Major</span><span style="color:var(--red)">&gt;10% lines OR &gt;20 lines changed</span></div>
+          <div class="info-row"><span>🟡 Minor</span><span style="color:var(--yellow)">Keyword match OR &gt;3 lines</span></div>
+          <div class="info-row"><span>🟢 None</span><span style="color:var(--green)">All other small changes</span></div>
+          <div class="info-row"><span>Email sent for</span><span>Major + Minor changes</span></div>
+        </div>
+      </div>
+      <div class="alert-card">
+        <h3>📬 Sites with Alert Emails</h3>
+        <div id="alertEmailsList"><p style="font-size:14px;color:var(--muted)">No sites with alert emails yet. Add a site with an email address.</p></div>
+      </div>
+      <div class="alert-card">
+        <h3>📊 Recent Alert Activity <span style="font-size:13px;font-weight:400;color:var(--muted)">(Major + Minor only)</span></h3>
+        <div id="histFeedAlerts"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Site</div>
+      <button class="icon-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Website URL *</label>
+      <input class="form-input" id="inputUrl" type="url" placeholder="https://example.com" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Check Interval</label>
+        <select class="form-select" id="inputInterval">
+          <option value="2">Every 2 min</option>
+          <option value="5">Every 5 min</option>
+          <option value="10">Every 10 min</option>
+          <option value="30" selected>Every 30 min</option>
+          <option value="60">Every hour</option>
+          <option value="1440">Every day</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Alert Email (optional)</label>
+        <input class="form-input" id="inputEmail" type="email" placeholder="you@gmail.com" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Keywords to watch (comma-separated, optional)</label>
+      <input class="form-input" id="inputKeywords" type="text" placeholder="price, launch, update, sold out" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="addBtn" onclick="addSite()">Add Site</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let sites = [], history = [], serverOnline = false;
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => { loadData(); setInterval(loadData, 30000); });
+
+async function loadData() {
+  await loadSites();
+  await loadHistory();
+}
+
+/* ── API ── */
+async function loadSites() {
+  try {
+    const r = await fetch(`${API}/sites`, { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) throw new Error();
+    sites = await r.json();
+    setServerStatus(true);
+  } catch {
+    sites = [];
+    setServerStatus(false);
+  }
+  renderAll();
+}
+
+async function loadHistory() {
+  try {
+    const r = await fetch(`${API}/history`, { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) throw new Error();
+    history = await r.json();
+  } catch {
+    history = [];
+  }
+  renderAll();
+}
+
+function setServerStatus(online) {
+  serverOnline = online;
+  const pill = document.getElementById('serverStatus');
+  const txt  = document.getElementById('serverStatusText');
+  const banner = document.getElementById('serverBanner');
+  if (online) {
+    pill.className = 'status-pill online';
+    txt.textContent = 'Monitor running';
+    banner.classList.add('hidden');
+  } else {
+    pill.className = 'status-pill offline';
+    txt.textContent = 'Server offline';
+    banner.classList.remove('hidden');
+  }
+}
+
+/* ── HTML builders ── */
+function siteRowHTML(s, i) {
+  const cls  = s.last_change || 'none';
+  const icon = cls==='major'?'🔴':cls==='minor'?'🟡':'🟢';
+  const last = s.last_checked ? timeAgo(new Date(s.last_checked)) + ' ago' : 'Never';
+  const host = s.url.replace(/^https?:\/\//,'').replace(/\/.*/,'');
+  return `<div class="site-row">
+    <div class="site-url">
+      <a href="${s.url}" target="_blank">${host}</a>
+      <small>${s.url}</small>
+    </div>
+    <span class="badge badge-${cls}">${icon} ${cls}</span>
+    <span style="color:var(--muted);font-size:13px">Every ${s.interval_minutes}m</span>
+    <span style="color:var(--muted);font-size:13px">${last}</span>
+    <span style="color:var(--muted);font-size:13px">${s.total_changes ?? 0}</span>
+    <div class="site-actions">
+      <button class="icon-btn run" title="Check now" onclick="checkSite('${s.id}',this)">↻</button>
+      <button class="icon-btn danger" title="Remove" onclick="removeSite('${s.id}')">✕</button>
+    </div>
+  </div>`;
+}
+
+function histItemHTML(h, i) {
+  const cls  = h.classification || 'none';
+  const icon = cls==='major'?'🔴':cls==='minor'?'🟡':'🟢';
+  const host = h.url ? h.url.replace(/^https?:\/\//,'').replace(/\/.*/,'') : 'Unknown';
+  const t    = h.timestamp ? timeAgo(new Date(h.timestamp)) + ' ago' : '';
+  return `<div class="history-item">
+    <div class="history-icon ${cls}">${icon}</div>
+    <div class="history-body">
+      <div class="history-url">${host}</div>
+      <div class="history-meta"><span class="badge badge-${cls}" style="font-size:10px">${cls}</span> +${h.added??0} added · -${h.removed??0} removed</div>
+    </div>
+    <div class="history-time">${t}</div>
+  </div>`;
+}
+
+function emptyHTML(icon, title, msg) {
+  return `<div class="empty-state"><div class="empty-icon">${icon}</div><h3>${title}</h3><p>${msg}</p></div>`;
+}
+
+/* ── Render everything ── */
+function renderAll() {
+  renderSites();
+  renderHistory();
+  renderStats();
+  renderAlerts();
+}
+
+function renderSites() {
+  const html = sites.length
+    ? sites.map(siteRowHTML).join('')
+    : emptyHTML('🔍','No sites tracked yet','Click "Add Site" to start monitoring.');
+  setHTML('sitesListDash', html);
+  setHTML('sitesListFull', html);
+}
+
+function renderHistory() {
+  const recent = history.slice(-20).reverse();
+  const all    = history.slice().reverse();
+  setHTML('histFeedDash', recent.length ? recent.map(histItemHTML).join('') : emptyHTML('📋','No changes yet','Changes appear after sites are checked.'));
+  setHTML('histFeedFull', all.length    ? all.map(histItemHTML).join('')    : emptyHTML('📋','No history yet','Run a check to see changes recorded here.'));
+  set('histCount',     `${history.length} events`);
+  set('histCountFull', `${history.length} total events`);
+}
+
+function renderStats() {
+  const major = history.filter(h=>h.classification==='major').length;
+  const minor = history.filter(h=>h.classification==='minor').length;
+  const none  = history.filter(h=>h.classification==='none').length;
+  const total = history.length;
+  set('statSites',   sites.length);
+  set('statChanges', total);
+  set('statMajor',   major);
+  const last = sites.map(s=>s.last_checked).filter(Boolean).sort().pop();
+  if (last) { const a=timeAgo(new Date(last)); set('statLast',a); set('statLastSub',a+' ago'); }
+  const mx = Math.max(major,minor,none,1);
+  bar('barMajor',major/mx*100); set('valMajor',major);
+  bar('barMinor',minor/mx*100); set('valMinor',minor);
+  bar('barNone', none /mx*100); set('valNone', none);
+  set('infoTotal',  total);
+  set('infoRate',   total ? Math.round((major+minor)/total*100)+'%' : '0%');
+  set('infoActive', sites.length);
+}
+
+function renderAlerts() {
+  const withEmail = sites.filter(s=>s.alert_email);
+  setHTML('alertEmailsList', withEmail.length
+    ? withEmail.map(s=>`<div class="info-row"><span>${s.url.replace(/^https?:\/\//,'').replace(/\/.*/,'')}</span><span style="color:var(--accent)">${s.alert_email}</span></div>`).join('')
+    : '<p style="font-size:14px;color:var(--muted)">No sites with alert emails yet.</p>');
+  const alertHist = history.filter(h=>h.classification==='major'||h.classification==='minor').slice().reverse();
+  setHTML('histFeedAlerts', alertHist.length
+    ? alertHist.map(histItemHTML).join('')
+    : emptyHTML('🔕','No alerts yet','Major and minor changes will appear here.'));
+}
+
+/* ── Actions ── */
+async function addSite() {
+  const url      = document.getElementById('inputUrl').value.trim();
+  const interval = +document.getElementById('inputInterval').value;
+  const email    = document.getElementById('inputEmail').value.trim();
+  const keywords = document.getElementById('inputKeywords').value.trim();
+
+  if (!url) { toast('⚠️','Please enter a URL','warn'); return; }
+  if (!url.startsWith('http')) { toast('⚠️','URL must start with https://','warn'); return; }
+  if (!serverOnline) { toast('❌','Flask server offline. Run: python app.py','err'); return; }
+
+  const btn = document.getElementById('addBtn');
+  btn.textContent = 'Adding…'; btn.disabled = true;
+  try {
+    const body = { url, interval_minutes: interval };
+    if (email) body.alert_email = email;
+    if (keywords) body.keywords = keywords.split(',').map(k=>k.trim()).filter(Boolean);
+    const r = await fetch(`${API}/sites`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    closeModal();
+    toast('✅','Site added! Monitoring started.','ok');
+    await loadSites();
+  } catch(e) {
+    toast('❌','Could not add site. Is app.py running?','err');
+    console.error(e);
+  }
+  btn.textContent = 'Add Site'; btn.disabled = false;
+}
+
+async function removeSite(id) {
+  if (!confirm('Remove this site from monitoring?')) return;
+  try {
+    await fetch(`${API}/sites/${id}`, { method: 'DELETE' });
+    toast('🗑️','Site removed','ok');
+    await loadSites();
+  } catch { toast('❌','Failed to remove','err'); }
+}
+
+async function checkSite(id, btn) {
+  btn.classList.add('spinning');
+  try {
+    await fetch(`${API}/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ site_id: id })
+    });
+    toast('🔍','Check complete!','ok');
+    await loadData();
+  } catch { toast('❌','Check failed','err'); }
+  btn.classList.remove('spinning');
+}
+
+async function checkAll() {
+  if (!serverOnline) { toast('❌','Server is offline','err'); return; }
+  toast('🔍','Checking all sites…','ok');
+  try {
+    await fetch(`${API}/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    await loadData();
+    toast('✅','All sites checked!','ok');
+  } catch { toast('❌','Check all failed','err'); }
+}
+
+/* ── Tab switching ── */
+function switchTab(tab, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('tab-' + tab);
+  if (page) page.classList.add('active');
+  set('tabTitle', { dashboard:'Dashboard', sites:'Sites', history:'History', alerts:'Alerts' }[tab] || tab);
+}
+
+/* ── Modal ── */
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('inputUrl').focus(), 120);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  ['inputUrl','inputEmail','inputKeywords'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('inputInterval').value = '30';
+  const btn = document.getElementById('addBtn'); btn.textContent = 'Add Site'; btn.disabled = false;
+}
+function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ── Toast ── */
+function toast(icon, msg, type) {
+  const stack = document.getElementById('toastStack');
+  const div = document.createElement('div');
+  div.className = 'toast';
+  div.innerHTML = `<span style="font-size:16px">${icon}</span><span style="font-weight:500;flex:1">${msg}</span>`;
+  if (type==='err')  div.style.borderColor = 'rgba(239,68,68,.35)';
+  if (type==='warn') div.style.borderColor = 'rgba(245,158,11,.35)';
+  if (type==='ok')   div.style.borderColor = 'rgba(16,185,129,.25)';
+  stack.appendChild(div);
+  setTimeout(() => { div.classList.add('hide'); setTimeout(() => div.remove(), 300); }, 4000);
+}
+
+/* ── Helpers ── */
+function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+function bar(id, pct) { setTimeout(() => { const el = document.getElementById(id); if (el) el.style.width = pct + '%'; }, 60); }
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date) / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s/60)}m`;
+  if (s < 86400) return `${Math.floor(s/3600)}h`;
+  return `${Math.floor(s/86400)}d`;
+}
+</script>
+</body>
+</html>

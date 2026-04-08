@@ -1,0 +1,1 @@
+{"url": "https://competitor.com", "timestamp": "20260401_101301", "content": "403 Forbidden\n403 Forbidden\nnginx"}
