@@ -6,3 +6,10 @@ lxml
 schedule
 python-dotenv
 waitress
+
+# Optional: Cloud integrations (install only what you need)
+# AWS SNS + SES notifications (free tier available)
+boto3
+
+# Azure Communication Services Email (100 emails/day free)
+azure-communication-email

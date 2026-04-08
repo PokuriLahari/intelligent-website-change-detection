@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import difflib
 import urllib3
 from alerts import send_alert
+from cloud_alerts import get_cloud_status
 
 app = Flask(__name__)
 CORS(app)
@@ -389,6 +390,14 @@ def get_history():
     except Exception as e:
         print(f"[ERROR] get_history: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/cloud-status", methods=["GET"])
+def cloud_status():
+    try:
+        return jsonify(get_cloud_status()), 200
+    except Exception as e:
+        print(f"[ERROR] cloud_status: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 # ===================== RUN =====================
 
