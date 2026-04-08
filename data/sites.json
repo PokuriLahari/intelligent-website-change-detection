@@ -3,8 +3,8 @@
     "id": "edc02897-f0f4-4803-afe2-871c4f0edf95",
     "url": "https://openai.com/pricing",
     "interval_minutes": 30,
-    "last_checked": "2026-04-07T10:47:20.224278",
-    "last_run_ts": 1775539039.6813514,
+    "last_checked": "2026-04-08T15:25:32.438750",
+    "last_run_ts": 1775661932.4356072,
     "created_at": "2026-04-07T08:34:23.177568",
     "alert_email": "pokurilahari16@gmail.com",
     "last_status": "error"
@@ -13,28 +13,28 @@
     "id": "3c272138-4363-419a-96e9-bb18b2057fef",
     "url": "https://anthropic.com/news",
     "interval_minutes": 30,
-    "last_checked": "2026-04-07T10:31:25.202170",
-    "last_run_ts": 1775538081.113051,
+    "last_checked": "2026-04-08T15:25:32.440893",
+    "last_run_ts": 1775661932.4356072,
     "created_at": "2026-04-07T08:54:29.581137",
     "alert_email": "kolludruvitha18@gmail.com",
-    "last_status": "no_change"
+    "last_status": "error"
   },
   {
     "id": "1a859153-b506-4959-bf1d-bf7690078487",
     "url": "https://aws.amazon.com/pricing",
     "interval_minutes": 30,
-    "last_checked": "2026-04-07T10:31:26.059854",
-    "last_run_ts": 1775538081.113051,
+    "last_checked": "2026-04-08T15:25:32.444115",
+    "last_run_ts": 1775661932.4356072,
     "created_at": "2026-04-07T08:55:44.922178",
     "alert_email": "dhruvasai1706@gmail.com",
-    "last_status": "no_change"
+    "last_status": "error"
   },
   {
     "id": "260401e5-20a7-46c1-baed-808f3689d4d7",
     "url": "https://vercel.com/pricing",
     "interval_minutes": 5,
-    "last_checked": "2026-04-07T10:52:22.617761",
-    "last_run_ts": 1775539342.3413985,
+    "last_checked": "2026-04-08T15:30:56.123694",
+    "last_run_ts": 1775662256.1213472,
     "created_at": "2026-04-07T08:57:39.123043",
     "alert_email": "dhruvasai1706@gmail.com",
     "last_status": "error"
@@ -43,20 +43,20 @@
     "id": "4ca28149-c6d0-4277-be0d-3ec45240ff80",
     "url": "https://news.ycombinator.com",
     "interval_minutes": 30,
-    "last_checked": "2026-04-07T10:31:30.678432",
-    "last_run_ts": 1775538081.113051,
+    "last_checked": "2026-04-08T15:25:32.448620",
+    "last_run_ts": 1775661932.4356072,
     "created_at": "2026-04-07T09:21:43.808988",
     "alert_email": "2420030552@klh.edu.in",
-    "last_status": "ok"
+    "last_status": "error"
   },
   {
     "id": "2d353056-ee43-414c-b73e-dd1d61fccfc7",
     "url": "https://news.ycombinator.com",
     "interval_minutes": 5,
-    "last_checked": "2026-04-07T10:52:29.201184",
-    "last_run_ts": 1775539343.6167064,
+    "last_checked": "2026-04-08T15:30:56.125492",
+    "last_run_ts": 1775662256.1213472,
     "created_at": "2026-04-07T09:30:07.136835",
     "alert_email": "dhruvasai1706@gmail.com",
-    "last_status": "ok"
+    "last_status": "error"
   }
 ]

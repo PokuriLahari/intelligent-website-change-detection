@@ -6,3 +6,7 @@ lxml
 schedule
 python-dotenv
 waitress
+# AWS integration (free tier: SES 62k emails/month, SNS 1M notifications/month)
+boto3
+# Azure integration (free tier: 100 emails/day)
+azure-communication-email
