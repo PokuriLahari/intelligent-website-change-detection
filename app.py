@@ -407,7 +407,7 @@ if __name__ == "__main__":
         except ImportError:
             print("ERROR: waitress not installed. Run: pip install waitress")
             print("Falling back to Flask dev server...")
-            app.run(debug=False, port=5000)
+            app.run(host="0.0.0.0", debug=False, port=5000)
     else:
-        print("🚀 Server running in DEVELOPMENT mode at http://127.0.0.1:5000")
-        app.run(debug=True, port=5000, use_reloader=False)
+        print("🚀 Server running in DEVELOPMENT mode at http://0.0.0.0:5000")
+        app.run(host="0.0.0.0", debug=True, port=5000, use_reloader=False)
