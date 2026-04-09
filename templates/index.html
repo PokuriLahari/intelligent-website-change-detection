@@ -1106,6 +1106,79 @@
             <div class="info-row"><span>Email sent for</span><span>Major + Minor changes</span></div>
           </div>
         </div>
+
+        <!-- AWS / Azure integration cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <!-- AWS -->
+          <div class="alert-card">
+            <h3>☁️ AWS Integration (Free Tier)</h3>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Two free options — set
+              <code>ALERT_PROVIDER</code> in your <code>.env</code> file:</p>
+
+            <div style="margin-top:12px">
+              <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px">Option A — AWS SES
+                (Simple Email Service)</div>
+              <div class="info-row"><span>Free tier</span><span style="color:var(--green)">62,000 emails/month (from EC2/Lambda) · sandbox otherwise</span></div>
+              <div class="info-row"><span>ALERT_PROVIDER</span><span><code>aws_ses</code></span></div>
+              <div class="info-row"><span>AWS_ACCESS_KEY_ID</span><span>your IAM key</span></div>
+              <div class="info-row"><span>AWS_SECRET_ACCESS_KEY</span><span>your IAM secret</span></div>
+              <div class="info-row"><span>AWS_REGION</span><span>e.g. us-east-1</span></div>
+              <a href="https://docs.aws.amazon.com/ses/latest/dg/setting-up.html" target="_blank" class="btn btn-ghost"
+                style="width:fit-content;font-size:12px;text-decoration:none;margin-top:8px">SES Setup Guide →</a>
+            </div>
+
+            <hr style="border:none;height:1px;background:var(--border);margin:16px 0">
+
+            <div>
+              <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px">Option B — AWS SNS
+                (Simple Notification Service)</div>
+              <div class="info-row"><span>Free tier</span><span style="color:var(--green)">1M notifications/month — Always Free</span></div>
+              <div class="info-row"><span>ALERT_PROVIDER</span><span><code>aws_sns</code></span></div>
+              <div class="info-row"><span>AWS_ACCESS_KEY_ID</span><span>your IAM key</span></div>
+              <div class="info-row"><span>AWS_SECRET_ACCESS_KEY</span><span>your IAM secret</span></div>
+              <div class="info-row"><span>AWS_SNS_TOPIC_ARN</span><span>your topic ARN</span></div>
+              <a href="https://docs.aws.amazon.com/sns/latest/dg/sns-getting-started.html" target="_blank"
+                class="btn btn-ghost"
+                style="width:fit-content;font-size:12px;text-decoration:none;margin-top:8px">SNS Setup Guide →</a>
+            </div>
+
+            <a href="https://aws.amazon.com/free/" target="_blank" class="btn btn-primary"
+              style="width:fit-content;font-size:13px;text-decoration:none;margin-top:12px">Create Free AWS Account →</a>
+          </div>
+
+          <!-- Azure -->
+          <div class="alert-card">
+            <h3>🔷 Azure Integration (Free Tier)</h3>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Use Azure Communication Services Email —
+              set <code>ALERT_PROVIDER=azure</code> in your <code>.env</code> file:</p>
+
+            <div style="margin-top:12px">
+              <div class="info-row"><span>Free tier</span><span style="color:var(--green)">100 emails/day</span></div>
+              <div class="info-row"><span>ALERT_PROVIDER</span><span><code>azure</code></span></div>
+              <div class="info-row"><span>AZURE_COMMUNICATION_<br>CONNECTION_STRING</span><span style="font-size:11px">from Azure portal</span></div>
+              <div class="info-row"><span>ALERT_FROM</span><span>verified sender address</span></div>
+              <div class="info-row"><span>ALERT_TO</span><span>recipient address</span></div>
+            </div>
+
+            <div style="margin-top:16px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;color:var(--muted);line-height:1.7">
+              <strong style="color:var(--text);display:block;margin-bottom:4px">Setup steps:</strong>
+              1. Create a free Azure account<br>
+              2. Create an Azure Communication Services resource<br>
+              3. Add an Email Communication Services resource<br>
+              4. Verify your sender domain<br>
+              5. Copy the connection string to <code>.env</code>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+              <a href="https://azure.microsoft.com/free/" target="_blank" class="btn btn-primary"
+                style="width:fit-content;font-size:13px;text-decoration:none">Create Free Azure Account →</a>
+              <a href="https://learn.microsoft.com/en-us/azure/communication-services/quickstarts/email/send-email"
+                target="_blank" class="btn btn-ghost"
+                style="width:fit-content;font-size:12px;text-decoration:none">Azure Email Guide →</a>
+            </div>
+          </div>
+        </div>
+
         <div class="alert-card">
           <h3>📬 Sites with Alert Emails</h3>
           <div id="alertEmailsList">
