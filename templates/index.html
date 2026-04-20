@@ -1107,7 +1107,17 @@
           </div>
         </div>
         <div class="alert-card">
-          <h3>📬 Sites with Alert Emails</h3>
+            <h3>☁️ Cloud Integration</h3>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:8px">
+              Connect AWS or Azure free-tier services for reliable cloud notifications.
+              Configure keys in your <code>.env</code> file then refresh.
+            </p>
+            <div id="cloudStatusList">
+              <div style="font-size:13px;color:var(--muted)">Loading cloud status…</div>
+            </div>
+          </div>
+          <div class="alert-card">
+            <h3>📬 Sites with Alert Emails</h3>
           <div id="alertEmailsList">
             <p style="font-size:14px;color:var(--muted)">No sites with alert emails yet. Add a site with an email
               address.</p>
@@ -1179,6 +1189,7 @@
     async function loadData() {
       await loadSites();
       await loadHistory();
+      await loadCloudStatus();
     }
 
     /* ── API ── */
@@ -1220,6 +1231,41 @@
         history = [];
       }
       renderAll();
+    }
+
+    async function loadCloudStatus() {
+      try {
+        const r = await fetch(`${API}/cloud-status`, { signal: AbortSignal.timeout(2000) });
+        if (!r.ok) throw new Error();
+        const status = await r.json();
+        renderCloudStatus(status);
+      } catch {
+        setHTML('cloudStatusList', '<p style="font-size:13px;color:var(--muted)">Cloud status unavailable (server offline).</p>');
+      }
+    }
+
+    function renderCloudStatus(status) {
+      const providerInfo = {
+        aws_sns:  { icon: '🔔', name: 'AWS SNS',        badge: '1,000 notifications/month free', setup: 'https://docs.aws.amazon.com/sns/latest/dg/welcome.html' },
+        aws_ses:  { icon: '📨', name: 'AWS SES',        badge: '200 emails/day free (sandbox)',  setup: 'https://docs.aws.amazon.com/ses/latest/dg/Welcome.html' },
+        azure_acs:{ icon: '📧', name: 'Azure ACS Email',badge: '100 emails/day free',            setup: 'https://learn.microsoft.com/en-us/azure/communication-services/quickstarts/email/send-email' },
+      };
+      const html = Object.entries(status).map(([key, s]) => {
+        const p = providerInfo[key] || { icon: '☁️', name: key, badge: '', setup: '#' };
+        const dot = s.configured
+          ? `<span style="color:var(--green);font-size:11px">● Active</span>`
+          : `<span style="color:var(--muted);font-size:11px">○ Not configured</span>`;
+        return `<div class="info-row" style="flex-direction:column;align-items:flex-start;gap:4px;padding:12px 0">
+          <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+            <span style="font-weight:500">${p.icon} ${p.name}</span>
+            ${dot}
+          </div>
+          <div style="font-size:12px;color:var(--muted)">${s.description || p.badge}</div>
+          ${!s.configured ? `<a href="${p.setup}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">Setup guide →</a>` : ''}
+        </div>`;
+      }).join('');
+      setHTML('cloudStatusList', html ||
+        '<p style="font-size:13px;color:var(--muted)">No cloud providers found.</p>');
     }
 
     function setServerStatus(online) {

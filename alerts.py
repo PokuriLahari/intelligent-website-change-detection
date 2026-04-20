@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from differ import format_diff_preview
 from dotenv import load_dotenv
+from cloud_alerts import notify_cloud
 
 load_dotenv()
 
@@ -124,6 +125,16 @@ Sent by your Website Monitor
 
     except Exception as e:
         print(f"  ERROR: Unexpected error — {e}\n")
+
+    # Cloud notifications (AWS SNS / AWS SES / Azure ACS) when configured
+    cloud_alert_to = None
+    if site_config and "alert_email" in site_config:
+        cloud_alert_to = site_config["alert_email"]
+    cloud_results = notify_cloud(url, classification, preview, alert_to=cloud_alert_to)
+    if not cloud_results:
+        print("  (No cloud providers configured — add AWS/Azure keys to .env to enable)\n")
+
+
 if __name__ == "__main__":
     test_diff = [
         "+new pricing: $49/month",
